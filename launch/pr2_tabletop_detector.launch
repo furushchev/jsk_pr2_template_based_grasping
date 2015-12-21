@@ -1,0 +1,13 @@
+<launch>
+  <include file="$(find jsk_pr2_template_based_grasping)/launch/perception.launch" />
+  <node name="tabletop_object_detection_server"
+        pkg="roseus" type="roseus"
+        args="$(find jsk_pr2_template_based_grasping)/euslisp/tabletop-object-detection-server.l"
+        output="screen" />
+
+  <node name="table_publisher"
+        pkg="roseus" type="roseus"
+        args="$(find jsk_pr2_template_based_grasping)/euslisp/table-publisher.l"
+        output="screen" />
+</launch>
+

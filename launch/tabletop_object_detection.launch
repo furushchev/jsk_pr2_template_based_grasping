@@ -1,0 +1,11 @@
+<launch>
+  <node name="tabletop_object_detection_server"
+        pkg="roseus" type="roseus"
+        args="$(find jsk_pr2_template_based_grasping)/euslisp/tabletop-object-detection-server.l"
+        output="screen" />
+  <include file="$(find jsk_pr2_template_based_grasping)/launch/perception.launch">
+    <arg name="LAUNCH_MANAGER" value="true" />
+    <arg name="MANAGER" value="hoge_manager" />
+  </include>
+</launch>
+
