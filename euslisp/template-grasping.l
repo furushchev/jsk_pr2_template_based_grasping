@@ -17,9 +17,12 @@
 (defparameter *object-cloud-topic* "tabletop_object_cloud/output")
 (defparameter *template-grasp-service* "/pr2_template_grasp_planner")
 (defparameter *base-frame-id* "/base_footprint")
+(defparameter *sensor-frame-id* "/head_mount_kinect_rgb_optical_frame")
 (defparameter *object-margin* 50)
+(defparameter *pre-pick-pose*
+  #f(50.1752 23.3516 57.7351 0.954272 -117.792 34.054 -20.0819 65.1391 -44.4718 -20.0459 -56.7598 -68.4633 -46.5458 -60.8041 -27.0101 -0.587299 35.208))
 
-(defun template-grasp-planning (&optional target-pc table)
+(defun call-template-grasp-planning (&optional target-pc table)
   (unless (check-service-available *template-grasp-service*)
     (return-from template-grasp-planning nil))
   (let* ((gpreq (instance object_manipulation_msgs::GraspPlanningRequest :init))
@@ -51,7 +54,18 @@
 
     (setq gpres
           (ros::service-call *template-grasp-service* gpreq))
-    gpres))
+    (if gpres
+        (send gpres :grasps) nil)))
+
+(defun solve-grasp-trajectory (grasp obstacles &key (arm :rarm))
+  (unless
+      (send *tfl* :wait-for-transform *base-frame-id* *sensor-frame-id* (ros::time 0) 10)
+    (return-from solve-grasp-trajectory nil))
+  (let ((base->sensor
+          (send *tfl* :lookup-transform *base-frame-id* *sensor-frame-id* (ros::time 0))))
+    (send *pr2* :angle-vector *pre-pick-pose*)
+    ))
+
 
 (defun init ()
   (pr2-init)
@@ -61,8 +75,11 @@
     (objects (list *pr2*))))
 
 (init)
-(setq *plan* (template-grasp-planning))
-(print-ros-msg *plan*)
+(setq *grasps* (call-template-grasp-planning))
+(ros::ros-info "grasps: ~A" *grasps*)
+(objects (list *pr2*
+               (mapcar #'ros::tf-pose->coords
+                       (send-all *grasps* :grasp_pose))))
 
 #|
 (init)
